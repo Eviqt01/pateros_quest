@@ -1,18 +1,26 @@
 <script lang="ts">
-	import { user } from '$lib/stores/auth';
+	import { user, profile } from '$lib/stores/auth';
 	import { supabase } from '$lib/supabase';
 	import { computeBestScores, fetchUserGameScores, type GameScore } from '$lib/gameScores';
 	import { onMount } from 'svelte';
-	import { afterNavigate } from '$app/navigation';
+	import { afterNavigate, goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 
 	let currentUser = $derived($user);
-	let profile = $state<{ username: string | null } | null>(null);
+	let currentProfile = $derived($profile);
+	let userProfile = $state<{ username: string | null } | null>(null);
 	let gameScores = $state<GameScore[]>([]);
 	let bestScores = $state<Record<string, number>>({});
 	let totalScore = $state(0);
 	let recentActivity = $state<GameScore[]>([]);
 	let loading = $state(true);
+
+	// Redirect admins to admin panel
+	$effect(() => {
+		if (currentProfile?.role === 'admin') {
+			goto(resolve('/dashboard/admin'));
+		}
+	});
 
 	async function loadDashboard() {
 		if (!currentUser) {
@@ -27,7 +35,7 @@
 			fetchUserGameScores(currentUser.id)
 		]);
 
-		if (profileRes.data) profile = profileRes.data;
+		if (profileRes.data) userProfile = profileRes.data;
 
 		if (scoresRes.error) {
 			console.error('Failed to load scores:', scoresRes.error);
@@ -104,7 +112,7 @@
 		<!-- Welcome -->
 		<div>
 			<h1 class="text-3xl font-bold text-white">
-				Welcome, {profile?.username || currentUser?.email} 👋
+				Welcome, {userProfile?.username || currentUser?.email} 👋
 			</h1>
 			<p class="mt-1 text-gray-400">Here's your gaming overview</p>
 		</div>

@@ -3,6 +3,22 @@
 	import { saveGameScore } from '$lib/gameScores';
 	import { supabase } from '$lib/supabase';
 	import { resolve } from '$app/paths';
+	import { onMount } from 'svelte';
+
+	// Types
+	interface Question {
+		q: string;
+		options: string[];
+		answer: number;
+	}
+
+	interface DBQuestion {
+		id: string;
+		question: string;
+		options: string[];
+		answer: number;
+		created_at: string;
+	}
 
 	let currentUser = $derived($user);
 	let gameState = $state<'menu' | 'playing' | 'finished'>('menu');
@@ -12,136 +28,313 @@
 	let selectedAnswer = $state<number | null>(null);
 	let showResult = $state(false);
 	let saving = $state(false);
+	let dbQuestions = $state<DBQuestion[]>([]);
 
-	const allQuestions = [
+	async function fetchQuestionsFromDB() {
+		try {
+			const { data, error } = await supabase.from('quiz_questions').select('*');
+			if (!error && data && data.length > 0) {
+				dbQuestions = data as DBQuestion[];
+			}
+		} catch (err) {
+			console.error('Failed to fetch quiz questions from database:', err);
+		}
+	}
+
+	onMount(() => {
+		fetchQuestionsFromDB();
+	});
+
+	const allQuestions: Question[] = [
 		{
-			q: 'What is the capital of France?',
-			options: ['London', 'Berlin', 'Paris', 'Madrid'],
+			q: 'What is Pateros?',
+			options: [
+				'A chartered city located in Metro Manila, Philippines.',
+				'A province located in the Calabarzon region.',
+				'Pateros is a municipality located in Metro Manila, Philippines. It is the only remaining municipality in the National Capital Region.',
+				'A barangay of Pasig City famous for its trading ports.'
+			],
 			answer: 2
 		},
 		{
-			q: 'Which planet is known as the Red Planet?',
-			options: ['Venus', 'Mars', 'Jupiter', 'Saturn'],
+			q: 'Why is Pateros historically important?',
+			options: [
+				'It is the birthplace of José Rizal.',
+				'Pateros is historically important because it is one of the oldest communities in Metro Manila and is famous for its duck-raising and balut industry.',
+				'It was the capital of the First Philippine Republic.',
+				'It is where the first Catholic mass in the Philippines took place.'
+			],
 			answer: 1
 		},
 		{
-			q: 'What is the largest ocean on Earth?',
-			options: ['Atlantic', 'Indian', 'Arctic', 'Pacific'],
-			answer: 3
+			q: 'What was the old name of Pateros?',
+			options: [
+				'Marikina or San Mateo.',
+				'Pasay or Baclaran.',
+				'Aguho or Embarcadero, when it was still a barrio of Pasig.',
+				'Tondo or Maynila.'
+			],
+			answer: 2
 		},
 		{
-			q: 'Who painted the Mona Lisa?',
-			options: ['Van Gogh', 'Da Vinci', 'Picasso', 'Rembrandt'],
+			q: 'Why was it called Aguho?',
+			options: [
+				'It was named after a Spanish governor named Don Francisco Aguho.',
+				'It was called Aguho because many agoho trees grew along the riverbanks in the area.',
+				'It is a native word that translates directly to "duck nest".',
+				'It was a term used by early Chinese traders for clay pots.'
+			],
 			answer: 1
 		},
-		{ q: 'What is the chemical symbol for gold?', options: ['Go', 'Gd', 'Au', 'Ag'], answer: 2 },
-		{ q: 'How many continents are there?', options: ['5', '6', '7', '8'], answer: 2 },
 		{
-			q: 'What is the fastest land animal?',
-			options: ['Lion', 'Cheetah', 'Horse', 'Gazelle'],
-			answer: 1
-		},
-		{
-			q: 'Which country has the most people?',
-			options: ['India', 'USA', 'China', 'Indonesia'],
+			q: 'What does Embarcadero mean?',
+			options: [
+				'Embarcadero means "small port" because Pateros served as a trading port during the early times.',
+				'It means "place of eggs" in ancient Spanish.',
+				'It translates to "swamp area" where ducks gather.',
+				'It means "independent town" in the local Tagalog dialect.'
+			],
 			answer: 0
 		},
-		{ q: 'What year did World War II end?', options: ['1943', '1944', '1945', '1946'], answer: 2 },
 		{
-			q: 'What is the smallest bone in the human body?',
-			options: ['Femur', 'Stapes', 'Tibia', 'Radius'],
+			q: 'How did Pateros get its name?',
+			options: [
+				'It was named after Father Pateros, a beloved Spanish missionary priest.',
+				'The name Pateros came from the word "pato" meaning duck, because the town became famous for duck raising and egg production.',
+				'It came from "patio", referring to the church plaza.',
+				'It was derived from "sapatos" due to the historical shoe-making industry.'
+			],
 			answer: 1
 		},
 		{
-			q: 'Which element has the atomic number 1?',
-			options: ['Helium', 'Oxygen', 'Carbon', 'Hydrogen'],
-			answer: 3
-		},
-		{
-			q: 'What is the hardest natural substance?',
-			options: ['Gold', 'Iron', 'Diamond', 'Platinum'],
+			q: 'What was the main livelihood in old Pateros?',
+			options: [
+				'Farming rice, fishing in Laguna de Bay, and weaving hats.',
+				'Gold mining, blacksmithing, and building boats.',
+				'The main livelihood was duck raising, balut making, salted egg production, and slipper making.',
+				'Weaving blankets, harvesting coconuts, and salt farming.'
+			],
 			answer: 2
 		},
 		{
-			q: 'Who wrote Romeo and Juliet?',
-			options: ['Dickens', 'Shakespeare', 'Austen', 'Twain'],
+			q: 'Why is Pateros called the Balut Capital?',
+			options: [
+				'Because it was the first place in Southeast Asia to domesticate wild ducks.',
+				'It is called the Balut Capital because it became widely known for producing balut and penoy from duck eggs.',
+				'Because it was decreed by the Spanish Governor-General in 1800.',
+				'Because the largest egg in the world was discovered there.'
+			],
 			answer: 1
 		},
 		{
-			q: 'What is the largest mammal?',
-			options: ['Elephant', 'Blue Whale', 'Giraffe', 'Hippopotamus'],
-			answer: 1
-		},
-		{ q: 'How many sides does a hexagon have?', options: ['5', '6', '7', '8'], answer: 1 },
-		{
-			q: 'What is the main language spoken in Brazil?',
-			options: ['Spanish', 'Portuguese', 'French', 'Italian'],
+			q: 'Before becoming independent, Pateros was part of what town?',
+			options: ['Taguig', 'Pasig', 'Makati', 'Taytay'],
 			answer: 1
 		},
 		{
-			q: 'Which gas do plants absorb?',
-			options: ['Oxygen', 'Nitrogen', 'Carbon Dioxide', 'Hydrogen'],
+			q: 'During what period did Pateros become progressive?',
+			options: [
+				'During the pre-colonial era before Spanish contact.',
+				'During the American occupation period.',
+				'Pateros became progressive during the Spanish colonial period because of trade and commerce in its port.',
+				'During the Japanese occupation in World War II.'
+			],
 			answer: 2
 		},
 		{
-			q: 'What is the tallest mountain in the world?',
-			options: ['K2', 'Kangchenjunga', 'Everest', 'Lhotse'],
-			answer: 2
+			q: 'Who traded with Pateros in early history?',
+			options: [
+				'Malay, Chinese, Indian, and Swedish traders visited Pateros for business.',
+				'British, French, and Russian merchants.',
+				'Japanese samurai and Portuguese explorers.',
+				'Dutch merchants and American whalers.'
+			],
+			answer: 0
 		},
 		{
-			q: 'Who invented the telephone?',
-			options: ['Edison', 'Tesla', 'Bell', 'Marconi'],
-			answer: 2
-		},
-		{ q: 'What is the currency of Japan?', options: ['Yuan', 'Won', 'Yen', 'Ringgit'], answer: 2 },
-		{
-			q: 'How many bones are in the human body?',
-			options: ['186', '206', '226', '256'],
+			q: 'What industry did Chinese traders introduce?',
+			options: [
+				'Rice terrace farming and pottery.',
+				'Chinese traders helped improve the balut industry and slipper-making industry.',
+				'Sugar refining and tobacco farming.',
+				'Silk weaving and abaca production.'
+			],
 			answer: 1
 		},
 		{
-			q: 'What is the largest desert in the world?',
-			options: ['Sahara', 'Gobi', 'Antarctic', 'Arabian'],
-			answer: 2
-		},
-		{
-			q: 'Which planet has the most moons?',
-			options: ['Jupiter', 'Saturn', 'Uranus', 'Neptune'],
+			q: 'When did Pateros officially become a municipality?',
+			options: ['June 12, 1898', 'March 29, 1900', 'November 7, 1975', 'January 1, 1909'],
 			answer: 1
 		},
 		{
-			q: 'What is the speed of light in km/s (approx)?',
-			options: ['200,000', '300,000', '400,000', '500,000'],
+			q: 'Under what province was Pateros included in 1901?',
+			options: [
+				'Province of Rizal',
+				'Province of Tondo',
+				'Province of Laguna',
+				'Province of Cavite'
+			],
+			answer: 0
+		},
+		{
+			q: 'What happened to Pateros in 1903?',
+			options: [
+				'It was converted into a highly urbanized city.',
+				'In 1903, Pateros, Taguig, and Muntinlupa were combined into one municipality.',
+				'It was completely destroyed by a massive fire.',
+				'It was separated from the Province of Rizal.'
+			],
 			answer: 1
 		},
 		{
-			q: 'What is the boiling point of water in Celsius?',
-			options: ['90°C', '95°C', '100°C', '110°C'],
+			q: 'What was the seat of government in the combined municipality?',
+			options: [
+				'Taguig',
+				'Muntinlupa',
+				'Pateros became the seat of the municipal government.',
+				'Alabang'
+			],
 			answer: 2
 		},
 		{
-			q: 'Which animal is known as the King of the Jungle?',
-			options: ['Tiger', 'Lion', 'Elephant', 'Bear'],
+			q: 'What happened in 1905 to the Municipality of Pateros?',
+			options: [
+				'In 1905, the Municipality of Pateros was renamed Municipality of Taguig.',
+				'It was annexed to Manila City.',
+				'It became the provincial capital of Rizal.',
+				'It was split into two independent barangays.'
+			],
+			answer: 0
+		},
+		{
+			q: 'Did Pateros lose its independence?',
+			options: [
+				'No, it has remained completely independent since the 16th century.',
+				'Yes, for a short time Pateros lost its separate municipal status.',
+				'Yes, it was bought by Makati.',
+				'No, Muntinlupa took over Muntinlupa only.'
+			],
 			answer: 1
 		},
 		{
-			q: 'What is the largest organ in the human body?',
-			options: ['Heart', 'Liver', 'Brain', 'Skin'],
-			answer: 3
+			q: 'When did Pateros regain independence?',
+			options: ['March 29, 1900', 'January 1, 1909', 'November 7, 1975', 'June 12, 1946'],
+			answer: 1
 		},
-		{ q: 'How many colors are in a rainbow?', options: ['5', '6', '7', '8'], answer: 2 },
-		{ q: 'What is the square root of 144?', options: ['10', '11', '12', '13'], answer: 2 },
 		{
-			q: 'Which country gifted the Statue of Liberty to the USA?',
-			options: ['England', 'Spain', 'France', 'Germany'],
+			q: 'Did Pateros join the Philippine Revolution?',
+			options: [
+				'No, they remained loyal to the Spanish Crown.',
+				'Yes, many Pateros residents joined the Katipunan during the 1896 Philippine Revolution.',
+				'Only after the Americans arrived in 1898.',
+				'They declared neutrality and refused to participate.'
+			],
+			answer: 1
+		},
+		{
+			q: 'Who was one of the known revolutionary leaders in Pateros?',
+			options: [
+				'Andres Bonifacio',
+				'Emilio Aguinaldo',
+				'One known revolutionary leader was Macario Almeda.',
+				'Jose Rizal'
+			],
 			answer: 2
+		},
+		{
+			q: 'What happened to Pateros during the Spanish retaliation?',
+			options: [
+				'The Spanish forces offered peace negotiations and land grants.',
+				'Spanish forces attacked nearby towns including Pateros after the revolutionaries fought back.',
+				'The town was evacuated and used as a Spanish military base.',
+				'Pateros was protected by its deep rivers and was untouched.'
+			],
+			answer: 1
+		},
+		{
+			q: "Did Pateros support Emilio Aguinaldo's government?",
+			options: [
+				'No, they opposed Aguinaldo and supported Andres Bonifacio.',
+				'Yes, on August 6, 1898, Pateros joined the revolutionary government of Emilio Aguinaldo.',
+				'They did not support any government until the 1900s.',
+				'They joined the American civil government instead.'
+			],
+			answer: 1
+		},
+		{
+			q: 'When did Pateros become part of Metro Manila?',
+			options: ['June 12, 1898', 'January 1, 1909', 'November 7, 1975', 'March 29, 1900'],
+			answer: 2
+		},
+		{
+			q: 'What is unique about Pateros in Metro Manila today?',
+			options: [
+				'It is the only municipality left in Metro Manila; all others are cities.',
+				'It is the largest city in terms of land area.',
+				'It is the only place where ducks are legally allowed.',
+				'It has no road connections to other cities.'
+			],
+			answer: 0
+		},
+		{
+			q: 'Who is the patron saint of Pateros?',
+			options: ['San Roque', 'Santa Marta', 'Santo Niño', 'San Juan Bautista'],
+			answer: 1
+		},
+		{
+			q: 'Why is Santa Marta important in Pateros history?',
+			options: [
+				'She was born and raised in Pateros.',
+				'Santa Marta is believed to protect the town, especially its duck industry and people.',
+				'She was the first historical ruler of the municipality.',
+				'She built the first church of Pateros.'
+			],
+			answer: 1
+		},
+		{
+			q: 'What local products made Pateros famous aside from balut?',
+			options: [
+				'Dried fish, barong tagalog, and abaca bags.',
+				'Pateros is also famous for salted eggs, inutak, and alfombra slippers.',
+				'Shoe manufacturing, chocolate, and clay pots.',
+				'Wooden toys, cane sugar, and coconut wine.'
+			],
+			answer: 1
+		},
+		{
+			q: 'Why is Pateros considered a historic town?',
+			options: [
+				'It is considered a historic town because of its old traditions, revolutionary participation, long-time industries, and unique identity in Metro Manila.',
+				'Because it was the first town founded by Spanish conquistadors.',
+				'Because it possesses the oldest stone fort in Luzon.',
+				'Because it is the location where the first Philippine constitution was written.'
+			],
+			answer: 0
+		},
+		{
+			q: 'What can we learn from the history of Pateros?',
+			options: [
+				'That communities must change their names to survive.',
+				'We learn that Pateros remained strong in preserving its culture, livelihood, and independence despite many political changes.',
+				'That duck raising is the only successful industry.',
+				'That small towns cannot survive without merging with larger cities.'
+			],
+			answer: 1
 		}
 	];
 
-	let questions = $state<typeof allQuestions>([]);
+	let questions = $state<Question[]>([]);
 
 	function startGame() {
-		questions = [...allQuestions].sort(() => Math.random() - 0.5).slice(0, 30);
+		let pool: Question[] = allQuestions;
+		if (dbQuestions.length > 0) {
+			pool = dbQuestions.map((item) => ({
+				q: item.question,
+				options: item.options,
+				answer: item.answer
+			}));
+		}
+		questions = [...pool].sort(() => Math.random() - 0.5).slice(0, 30);
 		currentQuestion = 0;
 		score = 0;
 		lives = 3;
@@ -229,7 +422,7 @@
 		<!-- Game Header -->
 		<div class="mb-6 flex items-center justify-between">
 			<div class="flex items-center gap-2">
-				{#each [0, 1, 2] as i (i)}
+				{#each [0, 1, 2] as const as i (i)}
 					<span class="text-2xl">{i < lives ? '❤️' : '🖤'}</span>
 				{/each}
 			</div>
@@ -318,6 +511,7 @@
 				>
 					Play Again
 				</button>
+
 				<a
 					href={resolve('/dashboard')}
 					class="rounded-lg border border-gray-700 px-6 py-3 font-semibold text-gray-300 hover:bg-gray-800"

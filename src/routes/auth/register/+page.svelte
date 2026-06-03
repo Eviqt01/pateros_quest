@@ -1,5 +1,7 @@
+<!-- register.svelte -->
 <script lang="ts">
 	import { supabase } from '$lib/supabase';
+	import { setPendingVerificationEmail } from '$lib/auth/verification';
 	import { resolve } from '$app/paths';
 
 	let email = $state('');
@@ -27,12 +29,9 @@
 		loading = true;
 		error = '';
 
-		const { error: signUpError } = await supabase.auth.signUp({
+		const { data, error: signUpError } = await supabase.auth.signUp({
 			email,
-			password,
-			options: {
-				emailRedirectTo: `${window.location.origin}/auth/verify`
-			}
+			password
 		});
 
 		if (signUpError) {
@@ -41,8 +40,21 @@
 			return;
 		}
 
-		// Redirect to verify page with email
-		window.location.href = `/auth/verify?email=${encodeURIComponent(email)}`;
+		// Confirmation required — Supabase emails a 6-digit code (see supabase-email-otp.md)
+		if (data.user && !data.session) {
+			setPendingVerificationEmail(email);
+			window.location.href = `${resolve('/auth/verify')}?email=${encodeURIComponent(email)}`;
+			return;
+		}
+
+		// Already confirmed (e.g. confirm email disabled in Supabase)
+		if (data.session) {
+			window.location.href = resolve('/dashboard');
+			return;
+		}
+
+		setPendingVerificationEmail(email);
+		window.location.href = `${resolve('/auth/verify')}?email=${encodeURIComponent(email)}`;
 	}
 </script>
 
@@ -51,7 +63,7 @@
 		<div class="mb-8 text-center">
 			<a href={resolve('/')} class="text-3xl font-bold text-amber-400">🎮 Pateros Quest</a>
 			<h2 class="mt-4 text-2xl font-semibold text-white">Create Account</h2>
-			<p class="mt-2 text-gray-400">Join the adventure today</p>
+			<p class="mt-2 text-gray-400">We'll email you a 6-digit code to verify your address</p>
 		</div>
 
 		<form
@@ -77,6 +89,7 @@
 					bind:value={email}
 					placeholder="you@example.com"
 					required
+					autocomplete="email"
 					class="w-full rounded-lg border border-gray-700 bg-gray-800 px-4 py-3 text-white placeholder-gray-500 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 focus:outline-none"
 				/>
 			</div>
@@ -90,6 +103,7 @@
 					placeholder="At least 6 characters"
 					required
 					minlength="6"
+					autocomplete="new-password"
 					class="w-full rounded-lg border border-gray-700 bg-gray-800 px-4 py-3 text-white placeholder-gray-500 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 focus:outline-none"
 				/>
 			</div>
@@ -105,6 +119,7 @@
 					placeholder="Confirm your password"
 					required
 					minlength="6"
+					autocomplete="new-password"
 					class="w-full rounded-lg border border-gray-700 bg-gray-800 px-4 py-3 text-white placeholder-gray-500 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 focus:outline-none"
 				/>
 				{#if confirmPassword && password !== confirmPassword}
@@ -117,7 +132,7 @@
 				disabled={loading}
 				class="w-full rounded-lg bg-amber-500 py-3 font-semibold text-gray-950 transition-colors hover:bg-amber-400 disabled:opacity-50"
 			>
-				{loading ? 'Creating Account...' : 'Register'}
+				{loading ? 'Sending code...' : 'Register & send code'}
 			</button>
 
 			<p class="mt-6 text-center text-sm text-gray-400">

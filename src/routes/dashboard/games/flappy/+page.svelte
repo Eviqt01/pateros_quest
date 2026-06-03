@@ -1,10 +1,6 @@
 <script lang="ts">
 	import { user } from '$lib/stores/auth';
-	import {
-		fetchFlappyLeaderboard,
-		fetchUserBestScore,
-		saveGameScore
-	} from '$lib/gameScores';
+	import { fetchFlappyLeaderboard, fetchUserBestScore, saveGameScore } from '$lib/gameScores';
 	import { drawDuck } from '$lib/flappy/drawDuck';
 	import { onMount, onDestroy } from 'svelte';
 

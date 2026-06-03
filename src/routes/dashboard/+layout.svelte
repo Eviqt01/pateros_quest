@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { user } from '$lib/stores/auth';
+	import { user, profile } from '$lib/stores/auth';
 	import { goto } from '$app/navigation';
 	import { signOut } from '$lib/stores/auth';
 	import { resolve } from '$app/paths';
@@ -7,6 +7,7 @@
 
 	let { children } = $props();
 	let currentUser = $derived($user);
+	let currentProfile = $derived($profile);
 	let mobileMenuOpen = $state(false);
 
 	onMount(() => {
@@ -66,6 +67,14 @@
 							>
 								Account
 							</a>
+							{#if currentProfile?.role === 'admin'}
+								<a
+									href={resolve('/dashboard/admin')}
+									class="text-sm font-semibold text-red-400 transition-colors hover:text-red-300"
+								>
+									⚙️ Admin Panel
+								</a>
+							{/if}
 						</div>
 					</div>
 
@@ -138,6 +147,15 @@
 						>
 							Account
 						</a>
+						{#if currentProfile?.role === 'admin'}
+							<a
+								href={resolve('/dashboard/admin')}
+								onclick={() => (mobileMenuOpen = false)}
+								class="rounded-lg px-3 py-2 text-sm font-semibold text-red-400 hover:bg-gray-800"
+							>
+								⚙️ Admin Panel
+							</a>
+						{/if}
 					</div>
 				</div>
 			{/if}

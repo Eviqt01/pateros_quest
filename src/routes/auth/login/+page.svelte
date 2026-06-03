@@ -1,5 +1,7 @@
+<!-- login.svelte -->
 <script lang="ts">
 	import { supabase } from '$lib/supabase';
+	import { isEmailNotConfirmedError, setPendingVerificationEmail } from '$lib/auth/verification';
 	import { resolve } from '$app/paths';
 
 	let email = $state('');
@@ -16,18 +18,39 @@
 		loading = true;
 		error = '';
 
-		const { error: signInError } = await supabase.auth.signInWithPassword({
+		const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
 			email,
 			password
 		});
 
 		if (signInError) {
+			if (isEmailNotConfirmedError(signInError.message)) {
+				setPendingVerificationEmail(email);
+				await supabase.auth.resend({ email, type: 'signup' });
+				window.location.href = `${resolve('/auth/verify')}?email=${encodeURIComponent(email)}`;
+				return;
+			}
 			error = signInError.message;
 			loading = false;
 			return;
 		}
 
-		window.location.href = '/dashboard';
+		// Fetch the user's role from the profiles table and redirect accordingly
+		if (signInData.user) {
+			const { data: profileData } = await supabase
+				.from('profiles')
+				.select('role')
+				.eq('id', signInData.user.id)
+				.single();
+
+			if (profileData?.role === 'admin') {
+				window.location.href = resolve('/dashboard/admin');
+			} else {
+				window.location.href = resolve('/dashboard');
+			}
+		} else {
+			window.location.href = resolve('/dashboard');
+		}
 	}
 </script>
 
