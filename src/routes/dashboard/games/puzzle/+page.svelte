@@ -4,13 +4,25 @@
 	import { supabase } from '$lib/supabase';
 	import { onMount } from 'svelte';
 
+	// Types
+	type Difficulty = 'easy' | 'medium' | 'hard';
+	type GameMode = 'select' | 'sudoku' | 'slider';
+
+	interface PuzzleImage {
+		id: string;
+		title: string;
+		image_url: string;
+		difficulty: Difficulty;
+		created_at?: string;
+	}
+
 	// General Game State
 	let currentUser = $derived($user);
-	let gameMode = $state<'select' | 'sudoku' | 'slider'>('select');
+	let gameMode = $state<GameMode>('select');
 	let saving = $state(false);
 
 	// ==================== SUDOKU GAME STATE ====================
-	let difficulty = $state<'easy' | 'medium' | 'hard' | null>(null);
+	let difficulty = $state<Difficulty | null>(null);
 	let grid = $state<number[][]>([]);
 	let solution = $state<number[][]>([]);
 	let selectedCell = $state<[number, number] | null>(null);
@@ -19,9 +31,9 @@
 	let timer = $state(0);
 	let timerInterval = $state<ReturnType<typeof setInterval> | null>(null);
 
-	const GRID_SIZES = { easy: 4, medium: 6, hard: 9 };
+	const GRID_SIZES: Record<Difficulty, number> = { easy: 4, medium: 6, hard: 9 };
 
-	function startSudoku(level: 'easy' | 'medium' | 'hard') {
+	function startSudoku(level: Difficulty) {
 		difficulty = level;
 		gameWon = false;
 		score = 0;
@@ -172,16 +184,16 @@
 		saving = false;
 	}
 
-	function formatTime(seconds: number) {
+	function formatTime(seconds: number): string {
 		const m = Math.floor(seconds / 60);
 		const s = seconds % 60;
 		return `${m}:${s.toString().padStart(2, '0')}`;
 	}
 
 	// ==================== SLIDER PUZZLE STATE ====================
-	let dbImages = $state<any[]>([]);
-	let selectedImage = $state<any | null>(null);
-	let sliderDifficulty = $state<'easy' | 'medium' | 'hard' | null>(null);
+	let dbImages = $state<PuzzleImage[]>([]);
+	let selectedImage = $state<PuzzleImage | null>(null);
+	let sliderDifficulty = $state<Difficulty | null>(null);
 	let sliderGridSize = $state(3);
 	let sliderTiles = $state<number[]>([]);
 	let sliderBlankIndex = $state(-1);
@@ -191,7 +203,7 @@
 	let sliderTimerInterval = $state<ReturnType<typeof setInterval> | null>(null);
 	let showPreview = $state(false);
 
-	const defaultPuzzles = [
+	const defaultPuzzles: PuzzleImage[] = [
 		{
 			id: '1',
 			title: 'San Roque Parish Church',
@@ -216,16 +228,16 @@
 		try {
 			const { data, error } = await supabase.from('puzzle_images').select('*');
 			if (!error && data && data.length > 0) {
-				dbImages = data;
+				dbImages = data as PuzzleImage[];
 			}
 		} catch (err) {
 			console.error('Failed to load puzzle images:', err);
 		}
 	}
 
-	let puzzleImagesList = $derived(dbImages.length > 0 ? dbImages : defaultPuzzles);
+	let puzzleImagesList = $derived<PuzzleImage[]>(dbImages.length > 0 ? dbImages : defaultPuzzles);
 
-	function startSliderGame(image: any, diff: 'easy' | 'medium' | 'hard') {
+	function startSliderGame(image: PuzzleImage, diff: Difficulty) {
 		selectedImage = image;
 		sliderDifficulty = diff;
 		sliderGridSize = diff === 'easy' ? 3 : diff === 'medium' ? 4 : 5;
@@ -238,7 +250,6 @@
 		let blankIdx = size - 1;
 		const N = sliderGridSize;
 
-		// Perform random valid slides to scramble
 		for (let i = 0; i < 250; i++) {
 			const r = Math.floor(blankIdx / N);
 			const c = blankIdx % N;
@@ -344,11 +355,8 @@
 	}
 
 	function handleGlobalKeyDown(e: KeyboardEvent) {
-		if (gameMode === 'sudoku') {
-			handleSudokuKeyDown(e);
-		} else if (gameMode === 'slider') {
-			handleSliderKeyDown(e);
-		}
+		if (gameMode === 'sudoku') handleSudokuKeyDown(e);
+		else if (gameMode === 'slider') handleSliderKeyDown(e);
 	}
 
 	function goBack() {
@@ -388,7 +396,6 @@
 
 <div class="mx-auto max-w-4xl">
 	{#if gameMode === 'select'}
-		<!-- Mode Selection Screen -->
 		<div class="space-y-6 text-center">
 			<h1 class="text-4xl font-extrabold tracking-tight text-white">🧩 Puzzle Challenge</h1>
 			<p class="mx-auto max-w-md text-gray-400">
@@ -416,21 +423,18 @@
 							<button
 								onclick={() => startSudoku('easy')}
 								class="rounded-lg border border-green-500/20 bg-green-500/10 py-2 text-xs font-bold text-green-400 transition-all hover:bg-green-500/20"
+								>Easy</button
 							>
-								Easy
-							</button>
 							<button
 								onclick={() => startSudoku('medium')}
 								class="rounded-lg border border-yellow-500/20 bg-yellow-500/10 py-2 text-xs font-bold text-yellow-400 transition-all hover:bg-yellow-500/20"
+								>Medium</button
 							>
-								Medium
-							</button>
 							<button
 								onclick={() => startSudoku('hard')}
 								class="rounded-lg border border-red-500/20 bg-red-500/10 py-2 text-xs font-bold text-red-400 transition-all hover:bg-red-500/20"
+								>Hard</button
 							>
-								Hard
-							</button>
 						</div>
 					</div>
 				</div>
@@ -473,21 +477,18 @@
 										<button
 											onclick={() => startSliderGame(img, 'easy')}
 											class="rounded bg-gray-800 px-2 py-1 text-[10px] font-bold text-gray-300 transition-colors hover:bg-amber-500 hover:text-gray-950"
+											>3×3</button
 										>
-											3×3
-										</button>
 										<button
 											onclick={() => startSliderGame(img, 'medium')}
 											class="rounded bg-gray-800 px-2 py-1 text-[10px] font-bold text-gray-300 transition-colors hover:bg-amber-500 hover:text-gray-950"
+											>4×4</button
 										>
-											4×4
-										</button>
 										<button
 											onclick={() => startSliderGame(img, 'hard')}
 											class="rounded bg-gray-800 px-2 py-1 text-[10px] font-bold text-gray-300 transition-colors hover:bg-amber-500 hover:text-gray-950"
+											>5×5</button
 										>
-											5×5
-										</button>
 									</div>
 								</div>
 							{/each}
@@ -497,22 +498,20 @@
 			</div>
 		</div>
 	{:else if gameMode === 'sudoku'}
-		<!-- Sudoku Game Board -->
 		<div class="mx-auto max-w-2xl">
 			<div class="mb-6 flex items-center justify-between">
 				<button
 					onclick={goBack}
 					class="rounded-lg border border-gray-700 px-4 py-2 text-sm text-gray-300 hover:bg-gray-800"
+					>← Back</button
 				>
-					← Back
-				</button>
 				<div class="text-center">
 					<span class="text-sm text-gray-400">Time: </span>
 					<span class="font-mono text-lg font-bold text-amber-400">{formatTime(timer)}</span>
 				</div>
-				<span class="rounded-lg bg-gray-800 px-3 py-1 text-sm font-medium text-gray-300 capitalize">
-					Sudoku: {difficulty}
-				</span>
+				<span class="rounded-lg bg-gray-800 px-3 py-1 text-sm font-medium text-gray-300 capitalize"
+					>Sudoku: {difficulty}</span
+				>
 			</div>
 
 			{#if gameWon}
@@ -527,9 +526,8 @@
 					<button
 						onclick={goBack}
 						class="mt-4 rounded-lg bg-amber-500 px-6 py-2 font-semibold text-gray-950 hover:bg-amber-400"
+						>Play Again</button
 					>
-						Play Again
-					</button>
 				</div>
 			{/if}
 
@@ -582,9 +580,7 @@
 			</div>
 		</div>
 	{:else if gameMode === 'slider'}
-		<!-- Slider Game Board -->
 		<div class="mx-auto max-w-3xl">
-			<!-- Game header info -->
 			<div
 				class="mb-6 flex flex-col gap-4 border-b border-gray-800 pb-4 sm:flex-row sm:items-center sm:justify-between"
 			>
@@ -592,9 +588,8 @@
 					<button
 						onclick={goBack}
 						class="rounded-lg border border-gray-700 px-4 py-2 text-sm text-gray-300 hover:bg-gray-800"
+						>← Back</button
 					>
-						← Back
-					</button>
 					<div>
 						<h2 class="text-xl font-bold text-white">{selectedImage?.title}</h2>
 						<span class="text-xs text-gray-400 capitalize"
@@ -623,7 +618,6 @@
 				</div>
 			</div>
 
-			<!-- Completed State Alert -->
 			{#if sliderSolved}
 				<div
 					class="mb-6 animate-pulse rounded-2xl border border-green-500/30 bg-green-500/10 p-6 text-center shadow-lg shadow-green-500/5"
@@ -640,13 +634,11 @@
 					<button
 						onclick={goBack}
 						class="mt-4 rounded-lg bg-amber-500 px-6 py-2 font-semibold text-gray-950 hover:bg-amber-400"
+						>Back to Selection</button
 					>
-						Back to Selection
-					</button>
 				</div>
 			{/if}
 
-			<!-- Game Board Grid + Target Preview -->
 			<div class="mt-6 grid grid-cols-1 items-start gap-6 md:grid-cols-3">
 				<!-- The Slider Grid -->
 				<div class="flex justify-center md:col-span-2">
@@ -687,7 +679,7 @@
 					</div>
 				</div>
 
-				<!-- Sidebar instructions / Preview panel -->
+				<!-- Sidebar -->
 				<div class="space-y-4">
 					{#if showPreview || sliderSolved}
 						<div class="space-y-2 rounded-xl border border-gray-800 bg-gray-900/60 p-4">
