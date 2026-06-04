@@ -39,7 +39,7 @@
 			>
 				<div class="mb-2 text-4xl">❓</div>
 				<h3 class="text-lg font-semibold text-blue-400">Quiz Game</h3>
-				<p class="text-sm text-gray-500">Answer questions, (3) lives</p>
+				<p class="text-sm text-gray-500">Answer Questions<br /> (3) lives</p>
 			</div>
 			<div
 				class="rounded-xl border border-green-500/30 bg-green-500/10 p-6 transition-colors hover:border-green-500/50"
