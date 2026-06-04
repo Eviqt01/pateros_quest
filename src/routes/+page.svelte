@@ -16,7 +16,6 @@
 
 <main class="flex min-h-screen flex-col items-center justify-center bg-gray-950 text-white">
 	<div class="mx-auto max-w-2xl px-4 text-center">
-		<!-- Logo / Title -->
 		<div class="mb-8">
 			<h1 class="mb-4 text-6xl font-bold tracking-tight text-amber-400 sm:text-7xl">
 				🎮 Pateros Quest
@@ -45,8 +44,8 @@
 			<div
 				class="rounded-xl border border-green-500/30 bg-green-500/10 p-6 transition-colors hover:border-green-500/50"
 			>
-				<div class="mb-2 text-4xl">🐦</div>
-				<h3 class="text-lg font-semibold text-green-400">Flappy Bird</h3>
+				<div class="mb-2 text-4xl">🦆</div>
+				<h3 class="text-lg font-semibold text-green-400">Flapy Bird</h3>
 				<p class="text-sm text-gray-500">Beat the high score</p>
 			</div>
 		</div>

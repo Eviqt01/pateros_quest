@@ -28,7 +28,6 @@
 
 {#if currentUser}
 	<div class="min-h-screen bg-gray-950 text-white">
-		<!-- Navigation -->
 		<nav class="border-b border-gray-800 bg-gray-900">
 			<div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
 				<div class="flex h-16 items-center justify-between">
@@ -89,7 +88,6 @@
 							Logout
 						</button>
 
-						<!-- Mobile menu button -->
 						<button
 							onclick={toggleMobileMenu}
 							aria-label="Toggle menu"
@@ -108,7 +106,6 @@
 				</div>
 			</div>
 
-			<!-- Mobile menu -->
 			{#if mobileMenuOpen}
 				<div class="border-t border-gray-800 px-4 pt-2 pb-4 md:hidden">
 					<div class="flex flex-col gap-2">
@@ -161,7 +158,6 @@
 			{/if}
 		</nav>
 
-		<!-- Main content -->
 		<main class="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
 			{@render children()}
 		</main>

@@ -40,21 +40,31 @@ async function fetchProfile(userId: string) {
 
 export function initAuth() {
 	supabase.auth.getSession().then(async ({ data }) => {
-		if (data.session) {
-			user.set(data.session.user);
-			await fetchProfile(data.session.user.id);
-		}
-		loading.set(false);
-	});
+		const currentUser = data.session?.user ?? null;
 
-	supabase.auth.onAuthStateChange(async (_event, session) => {
-		const currentUser = session?.user ?? null;
 		user.set(currentUser);
+
 		if (currentUser) {
 			await fetchProfile(currentUser.id);
 		} else {
 			profile.set(null);
 		}
+
+		loading.set(false);
+	});
+
+	supabase.auth.onAuthStateChange((_event, session) => {
+		const currentUser = session?.user ?? null;
+
+		user.set(currentUser);
+
+		if (currentUser) {
+			fetchProfile(currentUser.id);
+		} else {
+			profile.set(null);
+		}
+
+		loading.set(false);
 	});
 }
 

@@ -416,7 +416,7 @@
 	>
 		<div>
 			<h1 class="flex items-center gap-2 text-3xl font-bold text-white">
-				<span>⚙️ Admin Panel</span>
+				<span>Admin Panel</span>
 			</h1>
 			<p class="mt-1 text-gray-400">Manage questions, puzzle images, and user roles</p>
 		</div>
@@ -672,9 +672,9 @@
 						</div>
 
 						<div class="relative flex items-center py-2">
-							<div class="flex-grow border-t border-gray-800"></div>
-							<span class="mx-4 flex-shrink text-xs text-gray-500 uppercase">or</span>
-							<div class="flex-grow border-t border-gray-800"></div>
+							<div class="grow border-t border-gray-800"></div>
+							<span class="mx-4 shrink text-xs text-gray-500 uppercase">or</span>
+							<div class="grow border-t border-gray-800"></div>
 						</div>
 
 						<div>

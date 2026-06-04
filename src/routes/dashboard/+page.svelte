@@ -169,7 +169,7 @@
 					href={resolve('/dashboard/games/flappy')}
 					class="group rounded-xl border border-green-500/30 bg-green-500/5 p-6 transition-all hover:border-green-500/50 hover:bg-green-500/10"
 				>
-					<div class="mb-4 text-5xl">🐦</div>
+					<div class="mb-4 text-5xl">🦆</div>
 					<h3 class="text-lg font-semibold text-green-400 group-hover:text-green-300">
 						Flappy Bird
 					</h3>
