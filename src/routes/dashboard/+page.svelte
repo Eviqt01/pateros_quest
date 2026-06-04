@@ -68,7 +68,7 @@
 			case 'quiz':
 				return '❓';
 			case 'flappy':
-				return '🐦';
+				return '🦆';
 			default:
 				return '🎮';
 		}

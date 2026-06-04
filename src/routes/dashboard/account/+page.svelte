@@ -156,7 +156,7 @@
 						href={resolve('/dashboard/games/flappy')}
 						class="rounded-lg border border-green-500/30 px-4 py-2 text-sm text-green-400 transition-colors hover:bg-green-500/10"
 					>
-						🐦 Flappy
+						🦆 Flappy
 					</a>
 				</div>
 			</div>
