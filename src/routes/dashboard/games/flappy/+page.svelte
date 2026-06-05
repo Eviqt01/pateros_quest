@@ -46,6 +46,10 @@
 
 	onMount(async () => {
 		drawInitial();
+
+		// Prevent scroll/zoom on canvas touch — must be non-passive
+		canvas.addEventListener('touchstart', (e) => e.preventDefault(), { passive: false });
+
 		if (!currentUser) return;
 
 		const { data: best } = await fetchUserBestScore(currentUser.id, 'flappy');
@@ -210,6 +214,7 @@
 			width={CANVAS_WIDTH}
 			height={CANVAS_HEIGHT}
 			onclick={jump}
+			ontouchstart={(e) => { e.preventDefault(); jump(); }}
 			class="cursor-pointer rounded-xl border-2 border-gray-700"
 		></canvas>
 
