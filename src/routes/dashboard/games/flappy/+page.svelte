@@ -15,11 +15,10 @@
 
 	const CANVAS_WIDTH = 400;
 	const CANVAS_HEIGHT = 600;
-	const GRAVITY = 0.02;
-	const JUMP_FORCE = -2;
-	const PIPE_WIDTH = 30;
+	const GRAVITY = 0.2;
+	const JUMP_FORCE = -5;
+	const PIPE_WIDTH = 75;
 	const PIPE_GAP = 180;
-	/** Min pixels from one pipe's left edge to the next (≈ one pair on screen at a time). */
 	const PIPE_SPACING = 300;
 	const PIPE_CAP_HEIGHT = 10;
 	const BASE_SPEED = 1;
